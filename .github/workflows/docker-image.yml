@@ -42,13 +42,25 @@ jobs:
       with:
         name: build-artifact
 
+    - name: Combine Docker image parts
+      run: cat local-test-image.tar.part-* > local-test-image.tar
+
+    - name: Login to Docker Hub
+      run: echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
+
+    - name: Tag Docker image
+      run: docker tag local-test-image:latest ${{ secrets.DOCKER_HUB_USERNAME }}/local-test-image:latest
+
+    - name: Push Docker image
+      run: docker push ${{ secrets.DOCKER_HUB_USERNAME }}/local-test-image:latest
+
     - name: Create GitHub Release
       id: create_release
       uses: actions/create-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ github.ref_name }}  # Use a valid tag name
+        tag_name: ${{ github.ref_name }}
         release_name: Release ${{ github.ref_name }}
         body: |
           Release notes for ${{ github.ref_name }}
