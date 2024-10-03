@@ -22,36 +22,10 @@ jobs:
     - name: Build ARM Image
       run: |
         docker buildx create --use
-        docker buildx build --platform linux/arm64 -t local-test-image:latest . --load
-
-    - name: Save Docker image
-      run: docker save -o local-test-image.tar local-test-image:latest
-
-    - name: Upload build artifacts
-      uses: actions/upload-artifact@v3
-      with:
-        name: build-artifact
-        path: local-test-image.tar
-
-  release:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-    - name: Download build artifacts
-      uses: actions/download-artifact@v3
-      with:
-        name: build-artifact
-
-    - name: Combine Docker image parts
-      run: cat local-test-image.tar.part-* > local-test-image.tar
+        docker buildx build --platform linux/arm64 -t ${{ secrets.DOCKER_HUB_USERNAME }}/local-test-image:latest .
 
     - name: Login to Docker Hub
       run: echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
 
-    - name: Tag Docker image
-      run: docker tag local-test-image:latest ${{ secrets.DOCKER_HUB_USERNAME }}/local-test-image:latest
-
     - name: Push Docker image
       run: docker push ${{ secrets.DOCKER_HUB_USERNAME }}/local-test-image:latest
-
- 
